@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { Text, View, StyleSheet, FlatList, Platform } from "react-native";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
@@ -7,16 +7,24 @@ import { ScreenContainer } from "@/components/screen-container";
 import { ThemeCard } from "@/components/theme-card";
 import { useApp } from "@/lib/app-context";
 import { THEMES, Theme } from "@/lib/store";
+import { trackThemeClick, trackPageView } from "@/lib/analytics";
 
 export default function ThemesScreen() {
   const { state, setDefaultTheme } = useApp();
 
+  // 记录页面访问
+  useEffect(() => {
+    trackPageView("/themes");
+  }, []);
+
   const handleSelectTheme = useCallback(
-    (themeId: string) => {
+    (theme: Theme) => {
       if (Platform.OS !== "web") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
-      setDefaultTheme(themeId);
+      setDefaultTheme(theme.id);
+      // 埋点：记录主题点击
+      trackThemeClick(theme.id, theme.name);
     },
     [setDefaultTheme]
   );
@@ -26,7 +34,7 @@ export default function ThemesScreen() {
       <ThemeCard
         theme={item}
         isSelected={state.defaultThemeId === item.id}
-        onPress={() => handleSelectTheme(item.id)}
+        onPress={() => handleSelectTheme(item)}
       />
     ),
     [state.defaultThemeId, handleSelectTheme]
