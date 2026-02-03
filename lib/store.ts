@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// 9 个核心主题定义
+// 10 个核心主题定义（新增随机夸夸）
 export interface Theme {
   id: string;
   name: string;
@@ -10,6 +10,13 @@ export interface Theme {
 }
 
 export const THEMES: Theme[] = [
+  {
+    id: "random",
+    name: "随机夸夸",
+    emoji: "🎲",
+    description: "不知道选什么？让我来随机夸夸你",
+    style: "综合各种风格，随机给予温暖的夸奖，适合任何心情。",
+  },
   {
     id: "loneliness",
     name: "对抗孤独",
@@ -92,16 +99,18 @@ export interface AppState {
   savedPraises: SavedPraise[];
   resonanceCount: number; // 共鸣数 (收藏的致自己类夸奖)
   echoCount: number; // 回响数 (分享或复制的予他人类夸奖)
+  onboardingComplete: boolean; // 是否完成引导
 }
 
 const STORAGE_KEY = "kuakuawo_state";
 
 const defaultState: AppState = {
   nickname: "朋友",
-  defaultThemeId: "happiness",
+  defaultThemeId: "random", // 新用户默认随机夸夸
   savedPraises: [],
   resonanceCount: 0,
   echoCount: 0,
+  onboardingComplete: false,
 };
 
 // 加载状态
@@ -145,4 +154,11 @@ export function getGreeting(): string {
 // 生成唯一 ID
 export function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
+// 获取随机主题（排除"随机夸夸"本身）
+export function getRandomTheme(): Theme {
+  const themesWithoutRandom = THEMES.filter((t) => t.id !== "random");
+  const randomIndex = Math.floor(Math.random() * themesWithoutRandom.length);
+  return themesWithoutRandom[randomIndex];
 }

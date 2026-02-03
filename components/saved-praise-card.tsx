@@ -3,7 +3,6 @@ import { Text, View, StyleSheet, Platform, Share } from "react-native";
 import { Pressable } from "react-native";
 import * as Haptics from "expo-haptics";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { useColors } from "@/hooks/use-colors";
 import { SavedPraise, THEMES } from "@/lib/store";
 
 interface SavedPraiseCardProps {
@@ -17,7 +16,6 @@ export function SavedPraiseCard({
   onDelete,
   onShare,
 }: SavedPraiseCardProps) {
-  const colors = useColors();
   const theme = THEMES.find((t) => t.id === praise.themeId);
 
   const handleShare = async () => {
@@ -61,60 +59,48 @@ export function SavedPraiseCard({
     }
   };
 
+  const getTypeColor = (type: SavedPraise["type"]) => {
+    switch (type) {
+      case "highlight":
+        return "#FFB74D";
+      case "others":
+        return "#81C784";
+      default:
+        return "#FF8A80";
+    }
+  };
+
   return (
-    <View
-      style={[
-        styles.card,
-        {
-          backgroundColor: colors.surface,
-          borderColor: colors.border,
-        },
-      ]}
-    >
+    <View style={styles.card}>
       {/* 头部信息 */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Text style={styles.emoji}>{theme?.emoji || "✨"}</Text>
-          <Text style={[styles.themeName, { color: colors.muted }]}>
-            {theme?.name || "未知主题"}
-          </Text>
+          <Text style={styles.themeName}>{theme?.name || "未知主题"}</Text>
         </View>
         <View style={styles.headerRight}>
           <View
             style={[
               styles.typeTag,
-              { backgroundColor: colors.primary + "20" },
+              { backgroundColor: getTypeColor(praise.type) + "25" },
             ]}
           >
-            <Text style={[styles.typeText, { color: colors.primary }]}>
+            <Text style={[styles.typeText, { color: getTypeColor(praise.type) }]}>
               {getTypeLabel(praise.type)}
             </Text>
           </View>
-          <Text style={[styles.date, { color: colors.muted }]}>
-            {formatDate(praise.createdAt)}
-          </Text>
+          <Text style={styles.date}>{formatDate(praise.createdAt)}</Text>
         </View>
       </View>
 
       {/* 夸奖内容 */}
-      <Text style={[styles.content, { color: colors.foreground }]}>
-        {praise.content}
-      </Text>
+      <Text style={styles.content}>{praise.content}</Text>
 
       {/* 用户输入（如果有） */}
       {praise.input && (
-        <View
-          style={[
-            styles.inputContainer,
-            { backgroundColor: colors.background },
-          ]}
-        >
-          <Text style={[styles.inputLabel, { color: colors.muted }]}>
-            因为：
-          </Text>
-          <Text style={[styles.inputText, { color: colors.foreground }]}>
-            {praise.input}
-          </Text>
+        <View style={styles.inputContainer}>
+          <Text style={styles.inputLabel}>因为：</Text>
+          <Text style={styles.inputText}>{praise.input}</Text>
         </View>
       )}
 
@@ -127,8 +113,8 @@ export function SavedPraiseCard({
             pressed && { opacity: 0.6 },
           ]}
         >
-          <IconSymbol name="square.and.arrow.up" size={20} color={colors.muted} />
-          <Text style={[styles.actionText, { color: colors.muted }]}>分享</Text>
+          <IconSymbol name="square.and.arrow.up" size={18} color="#8B5A2B" />
+          <Text style={styles.actionText}>分享</Text>
         </Pressable>
         <Pressable
           onPress={handleDelete}
@@ -137,10 +123,8 @@ export function SavedPraiseCard({
             pressed && { opacity: 0.6 },
           ]}
         >
-          <IconSymbol name="heart.fill" size={20} color={colors.primary} />
-          <Text style={[styles.actionText, { color: colors.primary }]}>
-            取消收藏
-          </Text>
+          <IconSymbol name="heart.fill" size={18} color="#FF8A80" />
+          <Text style={[styles.actionText, { color: "#FF8A80" }]}>取消收藏</Text>
         </Pressable>
       </View>
     </View>
@@ -151,8 +135,15 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 16,
     padding: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
     borderWidth: 1,
+    borderColor: "rgba(255, 138, 128, 0.15)",
     marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   header: {
     flexDirection: "row",
@@ -170,6 +161,8 @@ const styles = StyleSheet.create({
   },
   themeName: {
     fontSize: 14,
+    color: "#8B5A2B",
+    fontFamily: "LXGWWenKai",
   },
   headerRight: {
     flexDirection: "row",
@@ -184,35 +177,47 @@ const styles = StyleSheet.create({
   typeText: {
     fontSize: 12,
     fontWeight: "500",
+    fontFamily: "LXGWWenKai",
   },
   date: {
     fontSize: 12,
+    color: "#8B5A2B",
+    opacity: 0.6,
+    fontFamily: "LXGWWenKai",
   },
   content: {
     fontSize: 16,
-    lineHeight: 26,
+    lineHeight: 28,
+    color: "#5D4037",
     marginBottom: 12,
+    fontFamily: "LXGWWenKai",
   },
   inputContainer: {
     flexDirection: "row",
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.5)",
     marginBottom: 12,
   },
   inputLabel: {
     fontSize: 14,
+    color: "#8B5A2B",
+    opacity: 0.7,
+    fontFamily: "LXGWWenKai",
   },
   inputText: {
     fontSize: 14,
+    color: "#5D4037",
     flex: 1,
+    fontFamily: "LXGWWenKai",
   },
   actions: {
     flexDirection: "row",
     justifyContent: "flex-end",
     gap: 20,
-    paddingTop: 8,
+    paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: "rgba(0,0,0,0.05)",
+    borderTopColor: "rgba(139, 90, 43, 0.08)",
   },
   actionButton: {
     flexDirection: "row",
@@ -221,5 +226,7 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 14,
+    color: "#8B5A2B",
+    fontFamily: "LXGWWenKai",
   },
 });

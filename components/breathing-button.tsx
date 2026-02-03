@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Text, StyleSheet, Platform } from "react-native";
+import { Text, StyleSheet, Platform, View } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -7,11 +7,11 @@ import Animated, {
   withTiming,
   withSequence,
   Easing,
-  runOnJS,
+  interpolate,
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import * as Haptics from "expo-haptics";
-import { useColors } from "@/hooks/use-colors";
+import { LinearGradient } from "expo-linear-gradient";
 
 interface BreathingButtonProps {
   onPress: () => void;
@@ -19,23 +19,34 @@ interface BreathingButtonProps {
 }
 
 export function BreathingButton({ onPress, disabled }: BreathingButtonProps) {
-  const colors = useColors();
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
   const rippleScale = useSharedValue(0);
   const rippleOpacity = useSharedValue(0);
+  const glowOpacity = useSharedValue(0.3);
 
-  // 呼吸动画
+  // 呼吸动画 - 更缓慢、更有节奏
   useEffect(() => {
+    // 主按钮呼吸
     scale.value = withRepeat(
       withSequence(
-        withTiming(1.03, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
-        withTiming(0.97, { duration: 1500, easing: Easing.inOut(Easing.ease) })
+        withTiming(1.02, { duration: 2000, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0.98, { duration: 2000, easing: Easing.inOut(Easing.sin) })
       ),
-      -1, // 无限循环
+      -1,
       true
     );
-  }, [scale]);
+    
+    // 光晕呼吸
+    glowOpacity.value = withRepeat(
+      withSequence(
+        withTiming(0.5, { duration: 2000, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0.2, { duration: 2000, easing: Easing.inOut(Easing.sin) })
+      ),
+      -1,
+      true
+    );
+  }, [scale, glowOpacity]);
 
   const triggerHaptic = () => {
     if (Platform.OS !== "web") {
@@ -57,9 +68,9 @@ export function BreathingButton({ onPress, disabled }: BreathingButtonProps) {
       
       // 水波纹动画
       rippleScale.value = 0;
-      rippleOpacity.value = 0.6;
-      rippleScale.value = withTiming(1.5, { duration: 600, easing: Easing.out(Easing.ease) });
-      rippleOpacity.value = withTiming(0, { duration: 600 });
+      rippleOpacity.value = 0.4;
+      rippleScale.value = withTiming(1.6, { duration: 700, easing: Easing.out(Easing.ease) });
+      rippleOpacity.value = withTiming(0, { duration: 700 });
       
       triggerHaptic();
     })
@@ -69,8 +80,8 @@ export function BreathingButton({ onPress, disabled }: BreathingButtonProps) {
         withTiming(1, { duration: 150 }),
         withRepeat(
           withSequence(
-            withTiming(1.03, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
-            withTiming(0.97, { duration: 1500, easing: Easing.inOut(Easing.ease) })
+            withTiming(1.02, { duration: 2000, easing: Easing.inOut(Easing.sin) }),
+            withTiming(0.98, { duration: 2000, easing: Easing.inOut(Easing.sin) })
           ),
           -1,
           true
@@ -90,30 +101,52 @@ export function BreathingButton({ onPress, disabled }: BreathingButtonProps) {
     opacity: rippleOpacity.value,
   }));
 
+  const animatedGlowStyle = useAnimatedStyle(() => ({
+    opacity: glowOpacity.value,
+  }));
+
   return (
     <GestureDetector gesture={tap}>
       <Animated.View style={[styles.container]}>
+        {/* 外层光晕 */}
+        <Animated.View style={[styles.glow, animatedGlowStyle]}>
+          <LinearGradient
+            colors={["rgba(255, 138, 128, 0.4)", "rgba(255, 183, 77, 0.2)", "transparent"]}
+            style={styles.glowGradient}
+            start={{ x: 0.5, y: 0.5 }}
+            end={{ x: 1, y: 1 }}
+          />
+        </Animated.View>
+        
         {/* 水波纹效果 */}
-        <Animated.View
-          style={[
-            styles.ripple,
-            { backgroundColor: colors.primary },
-            animatedRippleStyle,
-          ]}
-        />
-        {/* 主按钮 */}
-        <Animated.View
-          style={[
-            styles.button,
-            {
-              backgroundColor: colors.primary,
-              shadowColor: colors.primary,
-            },
-            animatedButtonStyle,
-          ]}
-        >
-          <Text style={[styles.buttonText, { color: "#FFFFFF" }]}>
-            今天，也夸夸自己吧
+        <Animated.View style={[styles.ripple, animatedRippleStyle]}>
+          <LinearGradient
+            colors={["rgba(255, 138, 128, 0.3)", "rgba(255, 183, 77, 0.1)"]}
+            style={styles.rippleGradient}
+          />
+        </Animated.View>
+        
+        {/* 主按钮 - 磨砂玻璃质感 */}
+        <Animated.View style={[styles.button, animatedButtonStyle]}>
+          {/* 背景渐变 */}
+          <LinearGradient
+            colors={["#FF9A8B", "#FF8A80", "#FF7B6B"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.buttonGradient}
+          />
+          {/* 磨砂玻璃覆盖层 */}
+          <View style={styles.frostedOverlay} />
+          {/* 高光效果 */}
+          <LinearGradient
+            colors={["rgba(255, 255, 255, 0.4)", "rgba(255, 255, 255, 0.1)", "transparent"]}
+            start={{ x: 0.3, y: 0 }}
+            end={{ x: 0.7, y: 0.6 }}
+            style={styles.highlight}
+          />
+          {/* 文字 */}
+          <Text style={styles.buttonText}>
+            今天，也夸夸自己{"\n"}吧
           </Text>
         </Animated.View>
       </Animated.View>
@@ -125,31 +158,73 @@ const styles = StyleSheet.create({
   container: {
     alignItems: "center",
     justifyContent: "center",
-    width: 220,
-    height: 220,
+    width: 240,
+    height: 240,
+  },
+  glow: {
+    position: "absolute",
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    overflow: "hidden",
+  },
+  glowGradient: {
+    flex: 1,
+    borderRadius: 140,
   },
   ripple: {
     position: "absolute",
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-  },
-  button: {
     width: 200,
     height: 200,
     borderRadius: 100,
+    overflow: "hidden",
+  },
+  rippleGradient: {
+    flex: 1,
+    borderRadius: 100,
+  },
+  button: {
+    width: 180,
+    height: 180,
+    borderRadius: 90,
     alignItems: "center",
     justifyContent: "center",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 12,
+    overflow: "hidden",
+    // 阴影
+    shadowColor: "#FF8A80",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
+    elevation: 15,
+  },
+  buttonGradient: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 90,
+  },
+  frostedOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    borderRadius: 90,
+  },
+  highlight: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: "50%",
+    borderTopLeftRadius: 90,
+    borderTopRightRadius: 90,
   },
   buttonText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "600",
+    color: "#FFFFFF",
     textAlign: "center",
-    lineHeight: 26,
-    paddingHorizontal: 24,
+    lineHeight: 28,
+    paddingHorizontal: 20,
+    textShadowColor: "rgba(0, 0, 0, 0.1)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+    fontFamily: "LXGWWenKai",
   },
 });

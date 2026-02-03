@@ -7,6 +7,7 @@ import {
   generateId,
   THEMES,
   Theme,
+  getRandomTheme,
 } from "./store";
 
 interface AppContextType {
@@ -14,11 +15,13 @@ interface AppContextType {
   isLoading: boolean;
   setNickname: (nickname: string) => void;
   setDefaultTheme: (themeId: string) => void;
+  setOnboardingComplete: (complete: boolean) => void;
   addPraise: (praise: Omit<SavedPraise, "id" | "createdAt">) => void;
   removePraise: (id: string) => void;
   incrementEchoCount: () => void;
   getDefaultTheme: () => Theme;
   getThemeById: (id: string) => Theme | undefined;
+  getActualTheme: (themeId: string) => Theme; // 如果是随机则返回随机主题
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -26,10 +29,11 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>({
     nickname: "朋友",
-    defaultThemeId: "happiness",
+    defaultThemeId: "random",
     savedPraises: [],
     resonanceCount: 0,
     echoCount: 0,
+    onboardingComplete: false,
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -57,6 +61,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const setDefaultTheme = useCallback(
     (themeId: string) => {
       updateState({ ...state, defaultThemeId: themeId });
+    },
+    [state, updateState]
+  );
+
+  const setOnboardingComplete = useCallback(
+    (complete: boolean) => {
+      updateState({ ...state, onboardingComplete: complete });
     },
     [state, updateState]
   );
@@ -103,11 +114,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [state, updateState]);
 
   const getDefaultTheme = useCallback(() => {
-    return THEMES.find((t) => t.id === state.defaultThemeId) || THEMES[1];
+    return THEMES.find((t) => t.id === state.defaultThemeId) || THEMES[0];
   }, [state.defaultThemeId]);
 
   const getThemeById = useCallback((id: string) => {
     return THEMES.find((t) => t.id === id);
+  }, []);
+
+  // 获取实际主题（如果是随机则返回随机主题）
+  const getActualTheme = useCallback((themeId: string) => {
+    if (themeId === "random") {
+      return getRandomTheme();
+    }
+    return THEMES.find((t) => t.id === themeId) || THEMES[0];
   }, []);
 
   return (
@@ -117,11 +136,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         isLoading,
         setNickname,
         setDefaultTheme,
+        setOnboardingComplete,
         addPraise,
         removePraise,
         incrementEchoCount,
         getDefaultTheme,
         getThemeById,
+        getActualTheme,
       }}
     >
       {children}
