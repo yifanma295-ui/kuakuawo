@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { Text, View, StyleSheet, FlatList, Pressable, Platform } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
@@ -7,12 +7,18 @@ import { ScreenContainer } from "@/components/screen-container";
 import { SavedPraiseCard } from "@/components/saved-praise-card";
 import { useApp } from "@/lib/app-context";
 import { SavedPraise } from "@/lib/store";
+import { trackPageView } from "@/lib/analytics";
 
 type FilterType = "resonance" | "echo";
 
 export default function EchoScreen() {
   const { state, removePraise, incrementEchoCount } = useApp();
   const [activeFilter, setActiveFilter] = useState<FilterType>("resonance");
+
+  // 记录页面访问
+  useEffect(() => {
+    trackPageView("/echo").catch(console.warn);
+  }, []);
 
   // 共鸣：致自己 + 高光时刻
   const resonancePraises = useMemo(() => {
