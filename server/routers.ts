@@ -1,10 +1,11 @@
+import { z } from "zod";
 import { COOKIE_NAME } from "../shared/const.js";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
+import { generatePraiseWithDeepSeek } from "./deepseek";
 
 export const appRouter = router({
-  // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
@@ -17,12 +18,39 @@ export const appRouter = router({
     }),
   }),
 
-  // TODO: add feature routers here, e.g.
-  // todo: router({
-  //   list: protectedProcedure.query(({ ctx }) =>
-  //     db.getUserTodos(ctx.user.id)
-  //   ),
-  // }),
+  // 夸奖生成 API
+  praise: router({
+    generate: publicProcedure
+      .input(
+        z.object({
+          nickname: z.string().min(1).max(50),
+          themeName: z.string().min(1).max(50),
+          themeStyle: z.string().min(1).max(200),
+          userInput: z.string().max(500).optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        try {
+          const praises = await generatePraiseWithDeepSeek(
+            input.nickname,
+            input.themeName,
+            input.themeStyle,
+            input.userInput
+          );
+          return {
+            success: true,
+            praises,
+          };
+        } catch (error) {
+          console.error("Praise generation error:", error);
+          return {
+            success: false,
+            praises: [],
+            error: "生成夸奖时出错，请稍后再试",
+          };
+        }
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
