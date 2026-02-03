@@ -9,12 +9,10 @@ import {
   Theme,
   getRandomTheme,
 } from "./store";
-import { trackNickname, trackPageView, getVisitorId } from "./analytics";
 
 interface AppContextType {
   state: AppState;
   isLoading: boolean;
-  visitorId: string | null;
   setNickname: (nickname: string) => void;
   setDefaultTheme: (themeId: string) => void;
   setOnboardingComplete: (complete: boolean) => void;
@@ -23,7 +21,7 @@ interface AppContextType {
   incrementEchoCount: () => void;
   getDefaultTheme: () => Theme;
   getThemeById: (id: string) => Theme | undefined;
-  getActualTheme: (themeId: string) => Theme;
+  getActualTheme: (themeId: string) => Theme; // 如果是随机则返回随机主题
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -38,17 +36,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     onboardingComplete: false,
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [visitorId, setVisitorId] = useState<string | null>(null);
 
-  // 加载初始状态和访客 ID
+  // 加载初始状态
   useEffect(() => {
-    Promise.all([loadState(), getVisitorId()]).then(([loadedState, vid]) => {
+    loadState().then((loadedState) => {
       setState(loadedState);
-      setVisitorId(vid);
       setIsLoading(false);
-      
-      // 记录首页访问
-      trackPageView("/");
     });
   }, []);
 
@@ -61,8 +54,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const setNickname = useCallback(
     (nickname: string) => {
       updateState({ ...state, nickname });
-      // 埋点：记录昵称设置
-      trackNickname(nickname);
     },
     [state, updateState]
   );
@@ -143,7 +134,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       value={{
         state,
         isLoading,
-        visitorId,
         setNickname,
         setDefaultTheme,
         setOnboardingComplete,

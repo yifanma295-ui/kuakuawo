@@ -116,7 +116,6 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="onboarding" options={{ presentation: "fullScreenModal" }} />
             <Stack.Screen name="oauth/callback" />
-            <Stack.Screen name="admin-secret" options={{ presentation: "fullScreenModal" }} />
           </Stack>
           <StatusBar style="auto" />
         </QueryClientProvider>

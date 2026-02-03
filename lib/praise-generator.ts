@@ -81,7 +81,6 @@ export async function generatePraise(
       themeName: theme.name,
       themeStyle: theme.style,
       userInput: input || undefined,
-      themeId: theme.id,
     });
 
     if (result.success && result.praises.length > 0) {
