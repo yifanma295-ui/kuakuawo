@@ -196,8 +196,24 @@ export function BreathingButton({ onPress, disabled }: BreathingButtonProps) {
         <Animated.View style={[styles.button, animatedButtonStyle]}>
           {/* 背景渐变 - 淡蓝色到橘黄色到淡粉色（更平滑的渐变） */}
           <LinearGradient
-            colors={["#64B5F6", "#A1C4FD", "#FFD6A5", "#FFB6C1", "#F48FB1"]}
-            locations={[0, 0.25, 0.5, 0.75, 1]}
+            colors={[
+              "#64B5F6",
+              "#7EC4F8",
+              "#98D3FA",
+              "#B2D8F7",
+              "#CCDDF4",
+              "#E6E2F1",
+              "#FFE7CE",
+              "#FFDEBD",
+              "#FFD5AC",
+              "#FFCCA0",
+              "#FFC3A0",
+              "#FFBAA0",
+              "#FFB1A5",
+              "#FFA8AA",
+              "#F48FB1"
+            ]}
+            locations={[0, 0.07, 0.14, 0.21, 0.28, 0.35, 0.42, 0.49, 0.56, 0.63, 0.70, 0.77, 0.84, 0.91, 1]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.buttonGradient}
