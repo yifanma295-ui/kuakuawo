@@ -5,15 +5,19 @@ import * as Haptics from "expo-haptics";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { SavedPraiseCard } from "@/components/saved-praise-card";
+import { BreathingBackgroundV3 } from "@/components/breathing-background-v3";
 import { useApp } from "@/lib/app-context";
 import { SavedPraise } from "@/lib/store";
 import { trackPageView } from "@/lib/analytics";
+import { NicknameEditModal } from "@/components/nickname-edit-modal";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 
 type FilterType = "resonance" | "echo";
 
 export default function EchoScreen() {
-  const { state, removePraise, incrementEchoCount } = useApp();
+  const { state, setNickname, removePraise, incrementEchoCount } = useApp();
   const [activeFilter, setActiveFilter] = useState<FilterType>("resonance");
+  const [showNicknameModal, setShowNicknameModal] = useState(false);
 
   // 记录页面访问
   useEffect(() => {
@@ -86,17 +90,25 @@ export default function EchoScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={["#FFF8E7", "#FFECD2", "#FFE4D6", "#FFD8CC"]}
-        locations={[0, 0.3, 0.7, 1]}
-        style={StyleSheet.absoluteFillObject}
-      />
+      {/* 呼吸感渐变背景 */}
+      <BreathingBackgroundV3 />
       
       <ScreenContainer className="flex-1" containerClassName="bg-transparent">
         {/* 页面标题 */}
         <View style={styles.header}>
-          <Text style={styles.nickname}>{state.nickname}</Text>
-          <Text style={styles.title}>Echo</Text>
+          <View style={styles.nicknameRow}>
+            <Text style={styles.nickname}>{state.nickname}</Text>
+            <Pressable
+              onPress={() => setShowNicknameModal(true)}
+              style={({ pressed }) => [
+                styles.editIcon,
+                pressed && { opacity: 0.6 },
+              ]}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <IconSymbol name="pencil" size={16} color="#8B5A2B" />
+            </Pressable>
+          </View>
           <Text style={styles.subtitle}>与自己的共鸣，向世界的回响</Text>
         </View>
 
@@ -188,6 +200,13 @@ export default function EchoScreen() {
           ListEmptyComponent={ListEmptyComponent}
         />
       </ScreenContainer>
+      
+      <NicknameEditModal
+        visible={showNicknameModal}
+        currentNickname={state.nickname}
+        onClose={() => setShowNicknameModal(false)}
+        onSave={setNickname}
+      />
     </View>
   );
 }
@@ -202,11 +221,19 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
     alignItems: "center",
   },
-  nickname: {
-    fontSize: 14,
-    color: "#8B5A2B",
-    opacity: 0.7,
+  nicknameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
     marginBottom: 4,
+  },
+  editIcon: {
+    padding: 4,
+  },
+  nickname: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#5D4037",
     fontFamily: "LXGWWenKai",
   },
   title: {

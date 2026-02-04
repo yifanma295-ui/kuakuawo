@@ -32,6 +32,7 @@ const MAPPING = {
   "figure.2.and.child.holdinghands": "family-restroom",
   "pawprint.fill": "pets",
   "airplane": "flight",
+  "pencil": "edit",
 } as IconMapping;
 
 /**

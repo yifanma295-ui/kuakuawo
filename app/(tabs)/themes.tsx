@@ -5,6 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { ThemeCard } from "@/components/theme-card";
+import { BreathingBackgroundV3 } from "@/components/breathing-background-v3";
 import { useApp } from "@/lib/app-context";
 import { THEMES, Theme } from "@/lib/store";
 import { trackPageView, trackThemeClick } from "@/lib/analytics";
@@ -44,11 +45,7 @@ export default function ThemesScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={["#FFF8E7", "#FFECD2", "#FFE4D6", "#FFD8CC"]}
-        locations={[0, 0.3, 0.7, 1]}
-        style={StyleSheet.absoluteFillObject}
-      />
+      <BreathingBackgroundV3 />
       
       <ScreenContainer className="flex-1" containerClassName="bg-transparent">
         <View style={styles.header}>

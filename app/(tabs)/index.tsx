@@ -17,19 +17,23 @@ import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { BreathingButton } from "@/components/breathing-button";
+import { BreathingBackgroundV3 } from "@/components/breathing-background-v3";
 import { TypewriterText } from "@/components/typewriter-text";
+import { NicknameEditModal } from "@/components/nickname-edit-modal";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useApp } from "@/lib/app-context";
 import { getGreeting } from "@/lib/store";
 import { generatePraise } from "@/lib/praise-generator";
 
 export default function HomeScreen() {
-  const { state, isLoading, addPraise, incrementEchoCount, getDefaultTheme, getActualTheme } = useApp();
+  const { state, isLoading, setNickname, addPraise, incrementEchoCount, getDefaultTheme, getActualTheme } = useApp();
   const [inputText, setInputText] = useState("");
   const [currentPraise, setCurrentPraise] = useState<string | null>(null);
   const [currentInput, setCurrentInput] = useState<string | null>(null);
   const [currentThemeId, setCurrentThemeId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const [showNicknameModal, setShowNicknameModal] = useState(false);
 
   // 检查是否需要显示 Onboarding
   useEffect(() => {
@@ -141,11 +145,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       {/* 呼吸感渐变背景 */}
-      <LinearGradient
-        colors={["#FFF8E7", "#FFECD2", "#FFE4D6", "#FFD8CC"]}
-        locations={[0, 0.3, 0.7, 1]}
-        style={StyleSheet.absoluteFillObject}
-      />
+      <BreathingBackgroundV3 />
       
       <ScreenContainer className="flex-1" containerClassName="bg-transparent">
         <KeyboardAvoidingView
@@ -159,7 +159,19 @@ export default function HomeScreen() {
           >
             {/* 顶部问候区域 */}
             <View style={styles.header}>
-              <Text style={styles.nickname}>{state.nickname}</Text>
+              <View style={styles.nicknameRow}>
+                <Text style={styles.nickname}>{state.nickname}</Text>
+                <Pressable
+                  onPress={() => setShowNicknameModal(true)}
+                  style={({ pressed }) => [
+                    styles.editIcon,
+                    pressed && { opacity: 0.6 },
+                  ]}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <IconSymbol name="pencil" size={16} color="#8B5A2B" />
+                </Pressable>
+              </View>
               <Text style={styles.greeting}>{greeting}</Text>
             </View>
 
@@ -283,6 +295,13 @@ export default function HomeScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </ScreenContainer>
+      
+      <NicknameEditModal
+        visible={showNicknameModal}
+        currentNickname={state.nickname}
+        onClose={() => setShowNicknameModal(false)}
+        onSave={setNickname}
+      />
     </View>
   );
 }
@@ -308,6 +327,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 16,
     paddingBottom: 8,
+  },
+  nicknameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  editIcon: {
+    padding: 4,
   },
   nickname: {
     fontSize: 28,

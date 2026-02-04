@@ -24,6 +24,10 @@ export function BreathingButton({ onPress, disabled }: BreathingButtonProps) {
   const rippleScale = useSharedValue(0);
   const rippleOpacity = useSharedValue(0);
   const glowOpacity = useSharedValue(0.3);
+  const waveScale1 = useSharedValue(1);
+  const waveScale2 = useSharedValue(1);
+  const waveOpacity1 = useSharedValue(0.3);
+  const waveOpacity2 = useSharedValue(0.3);
 
   // 呼吸动画 - 更缓慢、更有节奏
   useEffect(() => {
@@ -46,7 +50,39 @@ export function BreathingButton({ onPress, disabled }: BreathingButtonProps) {
       -1,
       true
     );
-  }, [scale, glowOpacity]);
+    
+    // 水波纹呼吸效果 - 第一层
+    waveScale1.value = withRepeat(
+      withTiming(1.3, { duration: 3000, easing: Easing.out(Easing.ease) }),
+      -1,
+      false
+    );
+    waveOpacity1.value = withRepeat(
+      withSequence(
+        withTiming(0.4, { duration: 0 }),
+        withTiming(0, { duration: 3000, easing: Easing.out(Easing.ease) })
+      ),
+      -1,
+      false
+    );
+    
+    // 水波纹呼吸效果 - 第二层（延迟 1.5 秒）
+    setTimeout(() => {
+      waveScale2.value = withRepeat(
+        withTiming(1.3, { duration: 3000, easing: Easing.out(Easing.ease) }),
+        -1,
+        false
+      );
+      waveOpacity2.value = withRepeat(
+        withSequence(
+          withTiming(0.4, { duration: 0 }),
+          withTiming(0, { duration: 3000, easing: Easing.out(Easing.ease) })
+        ),
+        -1,
+        false
+      );
+    }, 1500);
+  }, [scale, glowOpacity, waveScale1, waveScale2, waveOpacity1, waveOpacity2]);
 
   const triggerHaptic = () => {
     if (Platform.OS !== "web") {
@@ -104,6 +140,16 @@ export function BreathingButton({ onPress, disabled }: BreathingButtonProps) {
   const animatedGlowStyle = useAnimatedStyle(() => ({
     opacity: glowOpacity.value,
   }));
+  
+  const animatedWave1Style = useAnimatedStyle(() => ({
+    transform: [{ scale: waveScale1.value }],
+    opacity: waveOpacity1.value,
+  }));
+  
+  const animatedWave2Style = useAnimatedStyle(() => ({
+    transform: [{ scale: waveScale2.value }],
+    opacity: waveOpacity2.value,
+  }));
 
   return (
     <GestureDetector gesture={tap}>
@@ -118,7 +164,27 @@ export function BreathingButton({ onPress, disabled }: BreathingButtonProps) {
           />
         </Animated.View>
         
-        {/* 水波纹效果 */}
+        {/* 水波纹呼吸效果 - 第一层 */}
+        <Animated.View style={[styles.wave, animatedWave1Style]}>
+          <LinearGradient
+            colors={["rgba(100, 181, 246, 0.3)", "rgba(255, 183, 77, 0.2)", "rgba(244, 143, 177, 0.2)"]}
+            style={styles.waveGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
+        </Animated.View>
+        
+        {/* 水波纹呼吸效果 - 第二层 */}
+        <Animated.View style={[styles.wave, animatedWave2Style]}>
+          <LinearGradient
+            colors={["rgba(244, 143, 177, 0.3)", "rgba(255, 183, 77, 0.2)", "rgba(100, 181, 246, 0.2)"]}
+            style={styles.waveGradient}
+            start={{ x: 1, y: 0 }}
+            end={{ x: 0, y: 1 }}
+          />
+        </Animated.View>
+        
+        {/* 点击水波纹效果 */}
         <Animated.View style={[styles.ripple, animatedRippleStyle]}>
           <LinearGradient
             colors={["rgba(255, 138, 128, 0.3)", "rgba(255, 183, 77, 0.1)"]}
@@ -128,9 +194,9 @@ export function BreathingButton({ onPress, disabled }: BreathingButtonProps) {
         
         {/* 主按钮 - 磨砂玻璃质感 */}
         <Animated.View style={[styles.button, animatedButtonStyle]}>
-          {/* 背景渐变 */}
+          {/* 背景渐变 - 淡蓝色到橘黄色到淡粉色 */}
           <LinearGradient
-            colors={["#FF9A8B", "#FF8A80", "#FF7B6B"]}
+            colors={["#64B5F6", "#FFB74D", "#F48FB1"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.buttonGradient}
@@ -172,6 +238,17 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 140,
   },
+  wave: {
+    position: "absolute",
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    overflow: "hidden",
+  },
+  waveGradient: {
+    flex: 1,
+    borderRadius: 100,
+  },
   ripple: {
     position: "absolute",
     width: 200,
@@ -191,7 +268,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     overflow: "hidden",
     // 阴影
-    shadowColor: "#FF8A80",
+    shadowColor: "#64B5F6",
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.35,
     shadowRadius: 20,
