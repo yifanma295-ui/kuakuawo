@@ -25,6 +25,7 @@ import { NicknameEditModal } from "@/components/nickname-edit-modal";
 import { DebugResetButton } from "@/components/debug-reset-button";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { ShareCard, generateShareCard } from "@/components/share-card";
+import { ShareCardWeb, generateShareCardWeb } from "@/components/share-card-web";
 import { useApp } from "@/lib/app-context";
 import { getGreeting } from "@/lib/store";
 import { generatePraise } from "@/lib/praise-generator";
@@ -41,6 +42,7 @@ export default function HomeScreen() {
   const [showNicknameModal, setShowNicknameModal] = useState(false);
   const [isGeneratingCard, setIsGeneratingCard] = useState(false);
   const shareCardRef = useRef<ViewShot>(null);
+  const shareCardWebRef = useRef<HTMLDivElement>(null);
 
   // 检查是否需要显示 Onboarding
   useEffect(() => {
@@ -136,18 +138,16 @@ export default function HomeScreen() {
   );
 
   // 分享共鸣功能（V6.0 升级：生成分享卡片）
-  const handleSharePraise = useCallback(async () => {
-    if (!currentPraise || !currentThemeId || isGeneratingCard) return;
-    
-    setIsGeneratingCard(true);
+  const handleShareResonance = useCallback(async () => {
+    if (!currentPraise || !currentPraise || !currentThemeId || isGeneratingCard) return;
     
     try {
-      // 生成分享卡片
-      const uri = await generateShareCard(
-        currentPraise,
-        Date.now(),
-        shareCardRef
-      );
+      setIsGeneratingCard(true);
+      
+      // 根据平台选择不同的生成方法
+      const uri = Platform.OS === "web"
+        ? await generateShareCardWeb(currentPraise, Date.now(), shareCardWebRef)
+        : await generateShareCard(currentPraise, Date.now(), shareCardRef);
       
       if (uri) {
         // 记录到 Echo 页面的回响分类
@@ -294,7 +294,7 @@ export default function HomeScreen() {
                         </Pressable>
                         
                         <Pressable
-                          onPress={handleSharePraise}
+                          onPress={handleShareResonance}
                           disabled={isGeneratingCard}
                           style={({ pressed }) => [
                             styles.actionButton,
@@ -381,11 +381,19 @@ export default function HomeScreen() {
       {/* 隐藏的分享卡片组件（用于生成图片） */}
       {currentPraise && (
         <View style={{ position: "absolute", left: -9999, top: -9999 }}>
-          <ShareCard
-            ref={shareCardRef}
-            content={currentPraise}
-            timestamp={Date.now()}
-          />
+          {Platform.OS === "web" ? (
+            <ShareCardWeb
+              ref={shareCardWebRef}
+              content={currentPraise}
+              timestamp={Date.now()}
+            />
+          ) : (
+            <ShareCard
+              ref={shareCardRef}
+              content={currentPraise}
+              timestamp={Date.now()}
+            />
+          )}
         </View>
       )}
     </View>
