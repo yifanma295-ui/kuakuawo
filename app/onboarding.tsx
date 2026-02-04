@@ -13,11 +13,11 @@ import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   FadeIn,
-  FadeInDown,
   FadeInUp,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/lib/app-context";
+import { FallingText } from "@/components/falling-text";
 
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
@@ -47,21 +47,42 @@ export default function OnboardingScreen() {
         style={styles.keyboardView}
       >
         <View style={[styles.content, { paddingTop: insets.top + 60 }]}>
-          {/* 欢迎文字 */}
-          <Animated.View
-            entering={FadeInDown.duration(800).delay(200)}
-            style={styles.header}
-          >
-            <Text style={styles.emoji}>🌸</Text>
-            <Text style={styles.title}>欢迎来到夸夸我</Text>
-            <Text style={styles.subtitle}>
-              这里是属于你的温暖角落
-            </Text>
-          </Animated.View>
+          {/* Logo 和欢迎文字 */}
+          <View style={styles.header}>
+            {/* Logo - 逐字降落 */}
+            <View style={styles.logoContainer}>
+              <FallingText
+                text="🌸"
+                style={styles.emoji}
+                delay={200}
+                charDelay={0}
+              />
+            </View>
+
+            {/* 标题第一行 - 逐字降落 */}
+            <View style={styles.titleRow}>
+              <FallingText
+                text="夸夸我"
+                style={styles.title}
+                delay={400}
+                charDelay={100}
+              />
+            </View>
+
+            {/* 标题第二行 - 逐字降落 */}
+            <View style={styles.subtitleRow}>
+              <FallingText
+                text="好的呀，听我说"
+                style={styles.subtitle}
+                delay={800}
+                charDelay={80}
+              />
+            </View>
+          </View>
 
           {/* 昵称输入 */}
           <Animated.View
-            entering={FadeInUp.duration(800).delay(600)}
+            entering={FadeInUp.duration(800).delay(1600)}
             style={styles.inputSection}
           >
             <Text style={styles.question}>我该怎么称呼你呢？</Text>
@@ -84,7 +105,7 @@ export default function OnboardingScreen() {
 
           {/* 继续按钮 */}
           <Animated.View
-            entering={FadeIn.duration(600).delay(1000)}
+            entering={FadeIn.duration(600).delay(2000)}
             style={styles.buttonContainer}
           >
             <Pressable
@@ -124,23 +145,30 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: "center",
-    marginBottom: 48,
+    marginBottom: 60,
+  },
+  logoContainer: {
+    marginBottom: 24,
   },
   emoji: {
-    fontSize: 56,
+    fontSize: 64,
+  },
+  titleRow: {
     marginBottom: 16,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: "700",
     color: "#5D4037",
-    marginBottom: 8,
     fontFamily: "LXGWWenKai",
   },
+  subtitleRow: {
+    marginTop: 8,
+  },
   subtitle: {
-    fontSize: 16,
+    fontSize: 20,
     color: "#8B5A2B",
-    opacity: 0.8,
+    opacity: 0.9,
     fontFamily: "LXGWWenKai",
   },
   inputSection: {
