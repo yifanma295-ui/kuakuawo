@@ -195,3 +195,24 @@
 ### 后续优化（可选）
 - [ ] 调查 API 调用失败的根本原因（网络、超时、CORS）
 - [ ] 修复 API 调用问题，让用户能使用 DeepSeek AI 生成更高质量的夸奖
+
+
+## 发布计划
+
+### 第一阶段：Vercel 部署（Web 版 + 后端）
+- [ ] 在 GitHub 创建公开仓库
+- [ ] 在 Neon 创建 PostgreSQL 数据库
+- [ ] 部署后端到 Vercel
+- [ ] 部署前端到 Vercel
+- [ ] 验证前端应用正常运行
+- [ ] 验证管理员后台正常运行
+- [ ] 验证 API 调用成功（用户收到定制化夸奖）
+
+### 第二阶段：App Store 发布（iOS 原生应用）
+- [ ] 注册 Apple Developer Program ($99/年)
+- [ ] 创建 App ID
+- [ ] 创建 App Store Connect 应用
+- [ ] 填写应用信息和截图
+- [ ] 使用 Expo EAS 构建 iOS App
+- [ ] 提交 App Store 审核
+- [ ] 发布到 App Store
