@@ -53,6 +53,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       
       // 加载状态
       const loadedState = await loadState();
+      console.log("[AppContext] Loaded state:", loadedState);
+      console.log("[AppContext] Nickname from storage:", loadedState.nickname);
       setState(loadedState);
       setIsLoading(false);
       
@@ -71,7 +73,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const setNickname = useCallback(
     (nickname: string) => {
-      updateState({ ...state, nickname });
+      console.log("[AppContext] Setting nickname:", nickname);
+      const newState = { ...state, nickname };
+      updateState(newState);
       // 记录昵称到埋点
       trackNickname(nickname).catch(console.warn);
     },

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   ScrollView,
   Text,
@@ -24,9 +24,11 @@ import { TypewriterText } from "@/components/typewriter-text";
 import { NicknameEditModal } from "@/components/nickname-edit-modal";
 import { DebugResetButton } from "@/components/debug-reset-button";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { ShareCard, generateShareCard } from "@/components/share-card";
 import { useApp } from "@/lib/app-context";
 import { getGreeting } from "@/lib/store";
 import { generatePraise } from "@/lib/praise-generator";
+import ViewShot from "react-native-view-shot";
 
 export default function HomeScreen() {
   const { state, isLoading, setNickname, addPraise, addEchoPraise, themeChanged, resetThemeChanged, getDefaultTheme, getActualTheme } = useApp();
@@ -37,13 +39,18 @@ export default function HomeScreen() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const [showNicknameModal, setShowNicknameModal] = useState(false);
+  const [isGeneratingCard, setIsGeneratingCard] = useState(false);
+  const shareCardRef = useRef<ViewShot>(null);
 
   // 检查是否需要显示 Onboarding
   useEffect(() => {
+    console.log("[HomeScreen] isLoading:", isLoading);
+    console.log("[HomeScreen] onboardingComplete:", state.onboardingComplete);
+    console.log("[HomeScreen] Current nickname:", state.nickname);
     if (!isLoading && !state.onboardingComplete) {
       router.replace("/onboarding" as any);
     }
-  }, [isLoading, state.onboardingComplete]);
+  }, [isLoading, state.onboardingComplete, state.nickname]);
 
   // 主题变化时重置首页状态（V4.0 需求）
   useEffect(() => {
@@ -128,29 +135,45 @@ export default function HomeScreen() {
     [addPraise, currentPraise, currentThemeId, currentInput]
   );
 
-  // 分享共鸣功能（V4.0 需求）
+  // 分享共鸣功能（V6.0 升级：生成分享卡片）
   const handleSharePraise = useCallback(async () => {
-    if (!currentPraise || !currentThemeId) return;
+    if (!currentPraise || !currentThemeId || isGeneratingCard) return;
+    
+    setIsGeneratingCard(true);
     
     try {
-      // 复制到剪贴板
-      await Clipboard.setStringAsync(currentPraise);
+      // 生成分享卡片
+      const uri = await generateShareCard(
+        currentPraise,
+        Date.now(),
+        shareCardRef
+      );
       
-      // 记录到 Echo 页面的回响分类
-      addEchoPraise(currentPraise, currentThemeId);
-      
-      // 触发触感反馈
-      if (Platform.OS !== "web") {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      if (uri) {
+        // 记录到 Echo 页面的回响分类
+        addEchoPraise(currentPraise, currentThemeId);
+        
+        // 触发触感反馈
+        if (Platform.OS !== "web") {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+        
+        // 显示提示
+        if (Platform.OS === "web") {
+          Alert.alert("分享卡片已生成", "右键点击图片保存或分享 💕", [{ text: "好的" }]);
+        } else {
+          Alert.alert("分享卡片已生成", "已保存到相册，去分享给朋友吧 💕", [{ text: "好的" }]);
+        }
+      } else {
+        Alert.alert("生成失败", "请重试");
       }
-      
-      // 显示提示
-      Alert.alert("已复制到剪贴板", "去分享给朋友吧 💕", [{ text: "好的" }]);
     } catch (error) {
-      console.error("Copy to clipboard error:", error);
-      Alert.alert("复制失败", "请重试");
+      console.error("Generate share card error:", error);
+      Alert.alert("生成失败", "请重试");
+    } finally {
+      setIsGeneratingCard(false);
     }
-  }, [currentPraise, currentThemeId, addEchoPraise]);
+  }, [currentPraise, currentThemeId, addEchoPraise, isGeneratingCard]);
 
   const handleTypewriterComplete = useCallback(() => {
     setShowActions(true);
@@ -272,13 +295,17 @@ export default function HomeScreen() {
                         
                         <Pressable
                           onPress={handleSharePraise}
+                          disabled={isGeneratingCard}
                           style={({ pressed }) => [
                             styles.actionButton,
                             styles.shareButton,
                             pressed && { opacity: 0.8, transform: [{ scale: 0.97 }] },
+                            isGeneratingCard && { opacity: 0.5 },
                           ]}
                         >
-                          <Text style={styles.shareButtonText}>📤 分享共鸣</Text>
+                          <Text style={styles.shareButtonText}>
+                            {isGeneratingCard ? "生成中..." : "📤 分享共鸣"}
+                          </Text>
                         </Pressable>
                       </View>
                       
@@ -350,6 +377,17 @@ export default function HomeScreen() {
         onClose={() => setShowNicknameModal(false)}
         onSave={setNickname}
       />
+      
+      {/* 隐藏的分享卡片组件（用于生成图片） */}
+      {currentPraise && (
+        <View style={{ position: "absolute", left: -9999, top: -9999 }}>
+          <ShareCard
+            ref={shareCardRef}
+            content={currentPraise}
+            timestamp={Date.now()}
+          />
+        </View>
+      )}
     </View>
   );
 }

@@ -31,8 +31,11 @@ export default function OnboardingScreen() {
     }
     
     const finalName = name.trim() || "朋友";
+    console.log("[Onboarding] User entered name:", name);
+    console.log("[Onboarding] Final name:", finalName);
     setNickname(finalName);
     setOnboardingComplete(true);
+    console.log("[Onboarding] Navigating to home...");
     router.replace("/(tabs)");
   };
 
