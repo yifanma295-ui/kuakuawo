@@ -6,6 +6,7 @@ import {
   TextInput,
   Platform,
   KeyboardAvoidingView,
+  Image,
 } from "react-native";
 import { Pressable } from "react-native";
 import { router } from "expo-router";
@@ -49,15 +50,16 @@ export default function OnboardingScreen() {
         <View style={[styles.content, { paddingTop: insets.top + 60 }]}>
           {/* Logo 和欢迎文字 */}
           <View style={styles.header}>
-            {/* Logo - 逐字降落 */}
-            <View style={styles.logoContainer}>
-              <FallingText
-                text="🌸"
-                style={styles.emoji}
-                delay={200}
-                charDelay={0}
+            {/* Logo - App Icon */}
+            <Animated.View
+              entering={FadeIn.duration(600).delay(200)}
+              style={styles.logoContainer}
+            >
+              <Image
+                source={require("@/assets/images/icon.png")}
+                style={styles.appLogo}
               />
-            </View>
+            </Animated.View>
 
             {/* 标题第一行 - 逐字降落 */}
             <View style={styles.titleRow}>
@@ -149,6 +151,11 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     marginBottom: 24,
+  },
+  appLogo: {
+    width: 120,
+    height: 120,
+    borderRadius: 30,
   },
   emoji: {
     fontSize: 64,
