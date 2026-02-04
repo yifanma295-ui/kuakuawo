@@ -1,7 +1,6 @@
 import axios from "axios";
 
 const DEEPSEEK_API_BASE = "https://api.deepseek.com";
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 
 interface DeepSeekMessage {
   role: "system" | "user" | "assistant";
@@ -18,8 +17,7 @@ interface DeepSeekResponse {
 
 /**
  * V5.3 激进强制版本：显式提取关键词，强制 AI 必须使用
- * 核心问题：V5.2 的"提醒"还是不够，AI 仍然给通用回复
- * 解决方案：在 Prompt 中显式列出关键词，并要求 AI 在第一句话中必须使用
+ * 使用 DeepSeek API，支持独立部署到 Railway
  */
 export async function generatePraiseWithDeepSeekV53(
   nickname: string,
@@ -27,13 +25,16 @@ export async function generatePraiseWithDeepSeekV53(
   themeStyle: string,
   userInput?: string
 ): Promise<string[]> {
+  const apiKey = process.env.DEEPSEEK_API_KEY;
+  
   // V5.3 调试日志
   console.log("[V5.3 DEBUG] generatePraiseWithDeepSeekV53 called");
   console.log("[V5.3 DEBUG] nickname:", nickname);
   console.log("[V5.3 DEBUG] themeName:", themeName);
   console.log("[V5.3 DEBUG] userInput:", userInput);
-  
-  if (!DEEPSEEK_API_KEY) {
+  console.log("[V5.3 DEBUG] API Key configured:", !!apiKey);
+
+  if (!apiKey) {
     throw new Error("DEEPSEEK_API_KEY is not configured");
   }
 
@@ -128,25 +129,27 @@ export async function generatePraiseWithDeepSeekV53(
       {
         model: "deepseek-chat",
         messages,
-        temperature: 0.85, // 略微降低温度，确保更好地遵循指令
+        temperature: 0.85,
         max_tokens: 300,
         top_p: 0.9,
         stream: false,
       },
       {
         headers: {
-          Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
+          Authorization: `Bearer ${apiKey}`,
           "Content-Type": "application/json",
         },
-        timeout: 15000,
+        timeout: 30000,
       }
     );
 
     const content = response.data.choices[0]?.message?.content || "";
+    console.log("[V5.3 DEBUG] LLM response:", content);
+    
     const praises = content
       .split("|||")
-      .map((p) => p.trim())
-      .filter((p) => p.length > 0);
+      .map((p: string) => p.trim())
+      .filter((p: string) => p.length > 0);
 
     return praises.length > 0 ? praises : [content.trim()];
   } catch (error) {
@@ -163,10 +166,10 @@ function extractKeywords(input: string): string[] {
   const keywords: string[] = [];
   
   // 常见动词关键词
-  const verbs = ["洗澡", "批评", "考试", "加班", "学习", "工作", "跑步", "做饭", "打扫", "照顾", "陪伴", "完成", "坚持", "努力", "挑战", "克服", "面对", "接受", "处理", "解决"];
+  const verbs = ["洗澡", "批评", "考试", "加班", "学习", "工作", "跑步", "做饭", "打扫", "照顾", "陪伴", "完成", "坚持", "努力", "挑战", "克服", "面对", "接受", "处理", "解决", "写", "读", "看", "听", "说", "吃", "喝", "睡", "玩", "买", "卖", "送", "收", "开", "关", "走", "跑", "飞", "游", "爬", "跳"];
   
   // 常见名词关键词
-  const nouns = ["狗狗", "猫咪", "宠物", "领导", "老板", "同事", "朋友", "家人", "父母", "孩子", "作业", "任务", "项目", "报告", "计划"];
+  const nouns = ["狗狗", "猫咪", "宠物", "领导", "老板", "同事", "朋友", "家人", "父母", "孩子", "作业", "任务", "项目", "报告", "计划", "会议", "电话", "邮件", "文件", "代码", "设计", "产品", "客户", "用户"];
   
   // 检查输入中是否包含这些关键词
   for (const verb of verbs) {
@@ -200,34 +203,4 @@ export async function generatePraiseWithDeepSeek(
   userInput?: string
 ): Promise<string[]> {
   return generatePraiseWithDeepSeekV53(nickname, themeName, themeStyle, userInput);
-}
-
-// 验证 API Key 是否有效
-export async function validateDeepSeekApiKey(): Promise<boolean> {
-  if (!DEEPSEEK_API_KEY) {
-    return false;
-  }
-
-  try {
-    const response = await axios.post(
-      `${DEEPSEEK_API_BASE}/v1/chat/completions`,
-      {
-        model: "deepseek-chat",
-        messages: [{ role: "user", content: "Hi" }],
-        max_tokens: 5,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        timeout: 10000,
-      }
-    );
-
-    return response.status === 200;
-  } catch (error) {
-    console.error("DeepSeek API validation failed:", error);
-    return false;
-  }
 }
