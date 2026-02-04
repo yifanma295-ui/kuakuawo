@@ -266,7 +266,7 @@ export default function HomeScreen() {
                           ]}
                         >
                           <Text style={styles.saveButtonText}>
-                            💝 收藏{currentInput ? "高光" : ""}
+                            💝 收藏高光
                           </Text>
                         </Pressable>
                         
