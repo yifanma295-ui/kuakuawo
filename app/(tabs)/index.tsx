@@ -22,6 +22,7 @@ import { BreathingButton } from "@/components/breathing-button";
 import { BreathingBackgroundV3 } from "@/components/breathing-background-v3";
 import { TypewriterText } from "@/components/typewriter-text";
 import { NicknameEditModal } from "@/components/nickname-edit-modal";
+import { DebugResetButton } from "@/components/debug-reset-button";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useApp } from "@/lib/app-context";
 import { getGreeting } from "@/lib/store";
@@ -204,6 +205,7 @@ export default function HomeScreen() {
                 >
                   <IconSymbol name="pencil" size={16} color="#8B5A2B" />
                 </Pressable>
+                <DebugResetButton visible={true} />
               </View>
               <Text style={styles.greeting}>{greeting}</Text>
             </View>
