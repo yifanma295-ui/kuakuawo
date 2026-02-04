@@ -274,3 +274,22 @@
 - [x] 诊断 API 调用失败的具体原因（缺少 API Key）
 - [x] 修复 API 调用问题，确保 DeepSeek 正常工作（已配置 API Key）
 - [x] 测试多个场景验证 AI 定制化效果（测试通过）
+
+
+## V6.2 Vercel 前端直接调用 DeepSeek API
+
+### 核心改进：前端直接调用 DeepSeek API
+- [x] 创建 deepseek-client.ts 前端 API 调用模块
+- [x] 修改 praise-generator.ts 优先使用前端直接调用
+- [x] 使用 EXPO_PUBLIC_DEEPSEEK_API_KEY 环境变量
+- [ ] 在 Vercel 配置环境变量
+- [ ] 验证 Vercel 部署后 AI 定制化功能正常
+
+### Web 分享卡片修复
+- [x] 修复 share-card-web.tsx 图片加载问题
+- [x] 使用内联 CSS 替代图片引用
+- [ ] 验证 Web 版本分享卡片生成正常
+
+### 昵称同步调试
+- [x] 增强 store.ts 调试日志
+- [ ] 验证 Web 版本昵称同步正常

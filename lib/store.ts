@@ -116,12 +116,20 @@ const defaultState: AppState = {
 // 加载状态
 export async function loadState(): Promise<AppState> {
   try {
+    console.log("[Store] Loading state from storage...");
     const data = await AsyncStorage.getItem(STORAGE_KEY);
+    console.log("[Store] Raw data from storage:", data);
     if (data) {
-      return { ...defaultState, ...JSON.parse(data) };
+      const parsed = JSON.parse(data);
+      console.log("[Store] Parsed data:", parsed);
+      console.log("[Store] Nickname from storage:", parsed.nickname);
+      const result = { ...defaultState, ...parsed };
+      console.log("[Store] Final state:", result);
+      return result;
     }
+    console.log("[Store] No data found, using default state");
   } catch (error) {
-    console.error("Failed to load state:", error);
+    console.error("[Store] Failed to load state:", error);
   }
   return defaultState;
 }
@@ -129,9 +137,16 @@ export async function loadState(): Promise<AppState> {
 // 保存状态
 export async function saveState(state: AppState): Promise<void> {
   try {
+    console.log("[Store] Saving state:", state);
+    console.log("[Store] Saving nickname:", state.nickname);
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    console.log("[Store] State saved successfully");
+    
+    // 验证保存是否成功
+    const verify = await AsyncStorage.getItem(STORAGE_KEY);
+    console.log("[Store] Verification read:", verify);
   } catch (error) {
-    console.error("Failed to save state:", error);
+    console.error("[Store] Failed to save state:", error);
   }
 }
 

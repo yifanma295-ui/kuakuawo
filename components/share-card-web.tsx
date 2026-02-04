@@ -1,11 +1,29 @@
 import React from "react";
-import { View, Text, Image, Platform } from "react-native";
+import { Platform } from "react-native";
 import { toPng } from "html-to-image";
 
 interface ShareCardWebProps {
   content: string;
   timestamp: number;
 }
+
+// 内联 SVG Logo（避免图片加载问题）
+const LogoSvg = () => (
+  <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="160" height="160" rx="40" fill="url(#gradient)" />
+    <defs>
+      <linearGradient id="gradient" x1="0" y1="0" x2="160" y2="160" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#FFE4D6" />
+        <stop offset="1" stopColor="#FFECD2" />
+      </linearGradient>
+    </defs>
+    {/* 心形图标 */}
+    <path
+      d="M80 130C80 130 35 95 35 65C35 45 50 30 70 30C78 30 80 35 80 35C80 35 82 30 90 30C110 30 125 45 125 65C125 95 80 130 80 130Z"
+      fill="#FF8A80"
+    />
+  </svg>
+);
 
 export const ShareCardWeb = React.forwardRef<HTMLDivElement, ShareCardWebProps>(
   ({ content, timestamp }, ref) => {
@@ -21,31 +39,46 @@ export const ShareCardWeb = React.forwardRef<HTMLDivElement, ShareCardWebProps>(
       <div
         ref={ref}
         style={{
-          width: "1080px",
-          height: "1920px",
+          width: "360px",
+          height: "640px",
           background: "linear-gradient(180deg, #FFF8E7 0%, #FFECD2 50%, #FFE4D6 100%)",
           display: "flex",
           flexDirection: "column",
-          padding: "120px 80px",
+          padding: "40px 28px",
           justifyContent: "space-between",
-          fontFamily: "'LXGW WenKai', system-ui, sans-serif",
+          fontFamily: "system-ui, -apple-system, sans-serif",
+          position: "absolute",
+          left: "-9999px",
+          top: "-9999px",
         }}
       >
         {/* Logo 和 App 名称 */}
-        <div style={{ textAlign: "center", marginTop: "60px" }}>
-          <img
-            src={require("@/assets/images/icon.png")}
-            alt="夸夸我"
-            style={{
-              width: "160px",
-              height: "160px",
-              borderRadius: "40px",
-              marginBottom: "32px",
-            }}
-          />
+        <div style={{ textAlign: "center", marginTop: "20px" }}>
+          {/* 使用纯 CSS 绘制心形 */}
           <div
             style={{
-              fontSize: "56px",
+              width: "56px",
+              height: "56px",
+              borderRadius: "16px",
+              background: "linear-gradient(135deg, #FFE4D6 0%, #FFECD2 100%)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              margin: "0 auto 12px",
+              boxShadow: "0 4px 12px rgba(255, 138, 128, 0.3)",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "28px",
+              }}
+            >
+              💕
+            </div>
+          </div>
+          <div
+            style={{
+              fontSize: "20px",
               fontWeight: "600",
               color: "#8B5A2B",
             }}
@@ -61,13 +94,13 @@ export const ShareCardWeb = React.forwardRef<HTMLDivElement, ShareCardWebProps>(
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            padding: "100px 0",
+            padding: "32px 0",
           }}
         >
           <div
             style={{
-              fontSize: "52px",
-              lineHeight: "84px",
+              fontSize: "18px",
+              lineHeight: "30px",
               color: "#5D3A1A",
               textAlign: "center",
             }}
@@ -77,19 +110,19 @@ export const ShareCardWeb = React.forwardRef<HTMLDivElement, ShareCardWebProps>(
         </div>
 
         {/* 时间戳 */}
-        <div style={{ textAlign: "center", marginBottom: "40px" }}>
+        <div style={{ textAlign: "center", marginBottom: "16px" }}>
           <div
             style={{
-              fontSize: "40px",
+              fontSize: "14px",
               color: "#8B5A2B",
-              marginBottom: "12px",
+              marginBottom: "4px",
             }}
           >
             {dateStr}
           </div>
           <div
             style={{
-              fontSize: "36px",
+              fontSize: "12px",
               color: "#A0826D",
             }}
           >
@@ -101,13 +134,13 @@ export const ShareCardWeb = React.forwardRef<HTMLDivElement, ShareCardWebProps>(
         <div
           style={{
             textAlign: "center",
-            paddingTop: "40px",
-            borderTop: "2px solid rgba(139, 90, 43, 0.2)",
+            paddingTop: "16px",
+            borderTop: "1px solid rgba(139, 90, 43, 0.2)",
           }}
         >
           <div
             style={{
-              fontSize: "32px",
+              fontSize: "11px",
               color: "#A0826D",
             }}
           >
@@ -131,18 +164,34 @@ export async function generateShareCardWeb(
 ): Promise<string | null> {
   try {
     if (!divRef.current) {
-      console.error("Div ref is not available");
+      console.error("[ShareCardWeb] Div ref is not available");
       return null;
     }
 
+    console.log("[ShareCardWeb] Starting to generate card...");
+
+    // 临时显示元素以便截图
+    const originalStyle = divRef.current.style.cssText;
+    divRef.current.style.position = "fixed";
+    divRef.current.style.left = "0";
+    divRef.current.style.top = "0";
+    divRef.current.style.zIndex = "9999";
+
+    // 等待一帧确保渲染完成
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+
     // 使用 html-to-image 生成图片
     const dataUrl = await toPng(divRef.current, {
-      width: 1080,
-      height: 1920,
-      pixelRatio: 2,
+      width: 360,
+      height: 640,
+      pixelRatio: 3, // 高清输出
+      backgroundColor: "#FFF8E7",
     });
 
-    console.log("Share card generated (Web)");
+    // 恢复原始样式
+    divRef.current.style.cssText = originalStyle;
+
+    console.log("[ShareCardWeb] Card generated successfully");
 
     // 创建下载链接
     const link = document.createElement("a");
@@ -152,7 +201,7 @@ export async function generateShareCardWeb(
 
     return dataUrl;
   } catch (error) {
-    console.error("Failed to generate share card (Web):", error);
+    console.error("[ShareCardWeb] Failed to generate share card:", error);
     return null;
   }
 }

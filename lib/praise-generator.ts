@@ -1,6 +1,8 @@
 import { Theme } from "./store";
 import { generatePraiseApi } from "./api";
 import { generateCustomizedFallbackV6 } from "./praise-generator-v6";
+import { generatePraiseWithDeepSeek } from "./deepseek-client";
+import { Platform } from "react-native";
 
 // 预设的夸奖模板库，作为 API 失败时的后备方案
 const PRAISE_TEMPLATES: Record<string, string[]> = {
@@ -106,7 +108,15 @@ function generateCustomizedFallback(
   return [praise];
 }
 
-// 主生成函数 - 使用 DeepSeek API
+// 检查是否在 Web 平台且有前端 API Key
+function shouldUseDirectApiCall(): boolean {
+  // 检查是否配置了前端 API Key
+  const hasApiKey = !!process.env.EXPO_PUBLIC_DEEPSEEK_API_KEY;
+  console.log("[generatePraise] Check direct API call:", { platform: Platform.OS, hasApiKey });
+  return hasApiKey;
+}
+
+// 主生成函数 - 智能选择调用方式
 export async function generatePraise(
   nickname: string,
   theme: Theme,
@@ -114,9 +124,35 @@ export async function generatePraise(
 ): Promise<string[]> {
   console.log("[generatePraise] Called with:", { nickname, themeName: theme.name, input });
   
+  // 策略：
+  // 1. 如果有前端 API Key（Vercel 部署），直接调用 DeepSeek API
+  // 2. 否则尝试调用后端 API（Manus/开发环境）
+  // 3. 如果都失败，使用后备方案
+  
+  // 尝试方式 1：前端直接调用 DeepSeek API
+  if (shouldUseDirectApiCall()) {
+    try {
+      console.log("[generatePraise] Using direct DeepSeek API call...");
+      const result = await generatePraiseWithDeepSeek(
+        nickname,
+        theme.name,
+        theme.style,
+        input || undefined
+      );
+      
+      if (result && result.length > 0) {
+        console.log("[generatePraise] Direct API success:", result[0]);
+        return [result[0]];
+      }
+    } catch (error) {
+      console.error("[generatePraise] Direct API failed:", error);
+      // 继续尝试后端 API
+    }
+  }
+  
+  // 尝试方式 2：调用后端 API
   try {
-    // 调用后端 API 生成夸奖
-    console.log("[generatePraise] Calling API...");
+    console.log("[generatePraise] Calling backend API...");
     const result = await generatePraiseApi({
       nickname,
       themeName: theme.name,
@@ -124,22 +160,21 @@ export async function generatePraise(
       userInput: input || undefined,
     });
     
-    console.log("[generatePraise] API result:", result);
+    console.log("[generatePraise] Backend API result:", result);
 
     if (result.success && result.praises.length > 0) {
-      console.log("[generatePraise] API success, returning praise:", result.praises[0]);
-      // 只返回一句最动人的话
+      console.log("[generatePraise] Backend API success:", result.praises[0]);
       return [result.praises[0]];
     }
 
     // API 返回失败，使用后备方案
-    console.warn("[generatePraise] API returned no praises, using fallback");
+    console.warn("[generatePraise] Backend API returned no praises, using fallback");
     return generateFallbackPraise(nickname, theme, input);
   } catch (error) {
     // API 调用失败，使用后备方案
-    console.error("[generatePraise] Failed to generate praise via API:", error);
+    console.error("[generatePraise] Backend API failed:", error);
     if (error instanceof Error) {
-      console.error("[generatePraise] Error details:", error.message, error.stack);
+      console.error("[generatePraise] Error details:", error.message);
     }
     return generateFallbackPraise(nickname, theme, input);
   }
