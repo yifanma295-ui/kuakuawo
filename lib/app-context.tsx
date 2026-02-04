@@ -15,12 +15,15 @@ interface AppContextType {
   state: AppState;
   isLoading: boolean;
   visitorId: string;
+  themeChanged: boolean; // 主题是否变化
   setNickname: (nickname: string) => void;
   setDefaultTheme: (themeId: string) => void;
   setOnboardingComplete: (complete: boolean) => void;
   addPraise: (praise: Omit<SavedPraise, "id" | "createdAt">) => void;
   removePraise: (id: string) => void;
   incrementEchoCount: () => void;
+  addEchoPraise: (content: string, themeId: string) => void; // 添加回响记录
+  resetThemeChanged: () => void; // 重置主题变化标志
   getDefaultTheme: () => Theme;
   getThemeById: (id: string) => Theme | undefined;
   getActualTheme: (themeId: string) => Theme; // 如果是随机则返回随机主题
@@ -39,6 +42,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [visitorId, setVisitorId] = useState("");
+  const [themeChanged, setThemeChanged] = useState(false); // 主题变化标志
 
   // 加载初始状态和初始化埋点
   useEffect(() => {
@@ -77,6 +81,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const setDefaultTheme = useCallback(
     (themeId: string) => {
       updateState({ ...state, defaultThemeId: themeId });
+      setThemeChanged(true); // 标记主题已变化
     },
     [state, updateState]
   );
@@ -129,6 +134,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
     updateState({ ...state, echoCount: state.echoCount + 1 });
   }, [state, updateState]);
 
+  // 添加回响记录（分享共鸣时调用）
+  const addEchoPraise = useCallback(
+    (content: string, themeId: string) => {
+      const newPraise: SavedPraise = {
+        id: generateId(),
+        content,
+        themeId,
+        createdAt: Date.now(),
+        type: "echo",
+      };
+      updateState({
+        ...state,
+        savedPraises: [newPraise, ...state.savedPraises],
+        echoCount: state.echoCount + 1,
+      });
+    },
+    [state, updateState]
+  );
+
+  // 重置主题变化标志
+  const resetThemeChanged = useCallback(() => {
+    setThemeChanged(false);
+  }, []);
+
   const getDefaultTheme = useCallback(() => {
     return THEMES.find((t) => t.id === state.defaultThemeId) || THEMES[0];
   }, [state.defaultThemeId]);
@@ -151,12 +180,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         state,
         isLoading,
         visitorId,
+        themeChanged,
         setNickname,
         setDefaultTheme,
         setOnboardingComplete,
         addPraise,
         removePraise,
         incrementEchoCount,
+        addEchoPraise,
+        resetThemeChanged,
         getDefaultTheme,
         getThemeById,
         getActualTheme,

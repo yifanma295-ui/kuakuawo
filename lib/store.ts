@@ -88,7 +88,7 @@ export interface SavedPraise {
   content: string;
   themeId: string;
   createdAt: number;
-  type: "self" | "others" | "highlight"; // 致自己 / 予他人 / 高光时刻
+  type: "self" | "others" | "highlight" | "echo"; // 致自己 / 予他人 / 高光时刻 / 回响
   input?: string; // 用户输入的事由
 }
 

@@ -8,7 +8,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Alert,
 } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import { Pressable } from "react-native";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
@@ -26,7 +28,7 @@ import { getGreeting } from "@/lib/store";
 import { generatePraise } from "@/lib/praise-generator";
 
 export default function HomeScreen() {
-  const { state, isLoading, setNickname, addPraise, incrementEchoCount, getDefaultTheme, getActualTheme } = useApp();
+  const { state, isLoading, setNickname, addPraise, addEchoPraise, themeChanged, resetThemeChanged, getDefaultTheme, getActualTheme } = useApp();
   const [inputText, setInputText] = useState("");
   const [currentPraise, setCurrentPraise] = useState<string | null>(null);
   const [currentInput, setCurrentInput] = useState<string | null>(null);
@@ -41,6 +43,17 @@ export default function HomeScreen() {
       router.replace("/onboarding" as any);
     }
   }, [isLoading, state.onboardingComplete]);
+
+  // 主题变化时重置首页状态（V4.0 需求）
+  useEffect(() => {
+    if (themeChanged) {
+      setCurrentPraise(null);
+      setCurrentInput(null);
+      setCurrentThemeId(null);
+      setShowActions(false);
+      resetThemeChanged();
+    }
+  }, [themeChanged, resetThemeChanged]);
 
   const handleGeneratePraise = useCallback(
     async (customInput?: string) => {
@@ -114,9 +127,29 @@ export default function HomeScreen() {
     [addPraise, currentPraise, currentThemeId, currentInput]
   );
 
-  const handleSharePraise = useCallback(() => {
-    incrementEchoCount();
-  }, [incrementEchoCount]);
+  // 分享共鸣功能（V4.0 需求）
+  const handleSharePraise = useCallback(async () => {
+    if (!currentPraise || !currentThemeId) return;
+    
+    try {
+      // 复制到剪贴板
+      await Clipboard.setStringAsync(currentPraise);
+      
+      // 记录到 Echo 页面的回响分类
+      addEchoPraise(currentPraise, currentThemeId);
+      
+      // 触发触感反馈
+      if (Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      
+      // 显示提示
+      Alert.alert("已复制到剪贴板", "去分享给朋友吧 💕", [{ text: "好的" }]);
+    } catch (error) {
+      console.error("Copy to clipboard error:", error);
+      Alert.alert("复制失败", "请重试");
+    }
+  }, [currentPraise, currentThemeId, addEchoPraise]);
 
   const handleTypewriterComplete = useCallback(() => {
     setShowActions(true);
@@ -221,18 +254,31 @@ export default function HomeScreen() {
                       entering={FadeInUp.duration(400)}
                       style={styles.actionButtons}
                     >
-                      <Pressable
-                        onPress={() => handleSavePraise(currentInput ? "highlight" : "self")}
-                        style={({ pressed }) => [
-                          styles.actionButton,
-                          styles.saveButton,
-                          pressed && { opacity: 0.8, transform: [{ scale: 0.97 }] },
-                        ]}
-                      >
-                        <Text style={styles.saveButtonText}>
-                          💝 收藏{currentInput ? "高光时刻" : ""}
-                        </Text>
-                      </Pressable>
+                      <View style={styles.actionRow}>
+                        <Pressable
+                          onPress={() => handleSavePraise(currentInput ? "highlight" : "self")}
+                          style={({ pressed }) => [
+                            styles.actionButton,
+                            styles.saveButton,
+                            pressed && { opacity: 0.8, transform: [{ scale: 0.97 }] },
+                          ]}
+                        >
+                          <Text style={styles.saveButtonText}>
+                            💝 收藏{currentInput ? "高光" : ""}
+                          </Text>
+                        </Pressable>
+                        
+                        <Pressable
+                          onPress={handleSharePraise}
+                          style={({ pressed }) => [
+                            styles.actionButton,
+                            styles.shareButton,
+                            pressed && { opacity: 0.8, transform: [{ scale: 0.97 }] },
+                          ]}
+                        >
+                          <Text style={styles.shareButtonText}>📤 分享共鸣</Text>
+                        </Pressable>
+                      </View>
                       
                       <Pressable
                         onPress={handleRefresh}
@@ -420,6 +466,11 @@ const styles = StyleSheet.create({
     fontFamily: "LXGWWenKai",
   },
   actionButtons: {
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 12,
+  },
+  actionRow: {
     flexDirection: "row",
     gap: 12,
   },
@@ -432,6 +483,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#FF8A80",
   },
   saveButtonText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "600",
+    fontFamily: "LXGWWenKai",
+  },
+  shareButton: {
+    backgroundColor: "#87CEEB",
+  },
+  shareButtonText: {
     color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "600",

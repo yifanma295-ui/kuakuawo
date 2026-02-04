@@ -29,9 +29,9 @@ export default function EchoScreen() {
     return state.savedPraises.filter((p) => p.type === "self" || p.type === "highlight");
   }, [state.savedPraises]);
 
-  // 回响：予他人
+  // 回响：予他人 + 分享共鸣记录
   const echoPraises = useMemo(() => {
-    return state.savedPraises.filter((p) => p.type === "others");
+    return state.savedPraises.filter((p) => p.type === "others" || p.type === "echo");
   }, [state.savedPraises]);
 
   const filteredPraises = useMemo(() => {

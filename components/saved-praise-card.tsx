@@ -54,6 +54,8 @@ export function SavedPraiseCard({
         return "予他人";
       case "highlight":
         return "高光时刻";
+      case "echo":
+        return "分享共鸣";
       default:
         return "";
     }
@@ -65,6 +67,8 @@ export function SavedPraiseCard({
         return "#FFB74D";
       case "others":
         return "#81C784";
+      case "echo":
+        return "#87CEEB";
       default:
         return "#FF8A80";
     }
