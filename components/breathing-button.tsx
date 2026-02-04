@@ -194,9 +194,10 @@ export function BreathingButton({ onPress, disabled }: BreathingButtonProps) {
         
         {/* 主按钮 - 磨砂玻璃质感 */}
         <Animated.View style={[styles.button, animatedButtonStyle]}>
-          {/* 背景渐变 - 淡蓝色到橘黄色到淡粉色 */}
+          {/* 背景渐变 - 淡蓝色到橘黄色到淡粉色（更平滑的渐变） */}
           <LinearGradient
-            colors={["#64B5F6", "#FFB74D", "#F48FB1"]}
+            colors={["#64B5F6", "#A1C4FD", "#FFD6A5", "#FFB6C1", "#F48FB1"]}
+            locations={[0, 0.25, 0.5, 0.75, 1]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.buttonGradient}
@@ -211,9 +212,10 @@ export function BreathingButton({ onPress, disabled }: BreathingButtonProps) {
             style={styles.highlight}
           />
           {/* 文字 */}
-          <Text style={styles.buttonText}>
-            今天，也夸夸自己{"\n"}吧
-          </Text>
+          <View style={styles.textContainer}>
+            <Text style={styles.buttonText}>今天也夸夸</Text>
+            <Text style={styles.buttonText}>自己吧</Text>
+          </View>
         </Animated.View>
       </Animated.View>
     </GestureDetector>
@@ -267,11 +269,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
-    // 阴影
+    // 阴影 - 边缘模糊化
     shadowColor: "#64B5F6",
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.35,
-    shadowRadius: 20,
+    shadowRadius: 30,
     elevation: 15,
   },
   buttonGradient: {
@@ -292,13 +294,16 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 90,
     borderTopRightRadius: 90,
   },
+  textContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+  },
   buttonText: {
     fontSize: 20,
     fontWeight: "600",
     color: "#FFFFFF",
     textAlign: "center",
-    lineHeight: 28,
-    paddingHorizontal: 20,
     textShadowColor: "rgba(0, 0, 0, 0.1)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
