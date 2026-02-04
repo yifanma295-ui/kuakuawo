@@ -59,13 +59,65 @@ const PRAISE_TEMPLATES: Record<string, string[]> = {
 function generateFallbackPraise(
   nickname: string,
   theme: Theme,
-  _input?: string
+  input?: string
 ): string[] {
+  // V5.3 优化：即使是后备方案，也尝试使用用户输入
+  if (input && input.trim()) {
+    // 提取关键词（简单版本）
+    const keywords = extractKeywordsSimple(input);
+    
+    if (keywords.length > 0) {
+      // 生成针对具体输入的夸奖
+      return generateCustomizedFallback(nickname, input, keywords, theme);
+    }
+  }
+  
+  // 如果没有输入，使用通用模板
   const templates = PRAISE_TEMPLATES[theme.id] || PRAISE_TEMPLATES.random;
   const shuffled = [...templates].sort(() => Math.random() - 0.5);
-  // 只返回一句
   const selected = shuffled[0];
   return [selected.replace("{name}", nickname)];
+}
+
+// 简单的关键词提取（不依赖后端）
+function extractKeywordsSimple(input: string): string[] {
+  const keywords: string[] = [];
+  const commonWords = ["洗澡", "批评", "考试", "加班", "学习", "工作", "狗狗", "猫咪", "领导", "朋友"];
+  
+  for (const word of commonWords) {
+    if (input.includes(word)) {
+      keywords.push(word);
+    }
+  }
+  
+  return keywords;
+}
+
+// 生成定制化的后备夸奖
+function generateCustomizedFallback(
+  nickname: string,
+  input: string,
+  keywords: string[],
+  theme: Theme
+): string[] {
+  // 根据关键词生成针对性的夸奖
+  const keyword = keywords[0];
+  
+  // 针对不同关键词的定制化模板
+  const customTemplates: Record<string, string> = {
+    "洗澡": `${nickname}，给宠物洗澡可不是件轻松事，你能这么耐心细致地照顾它，说明你是个特别有爱心的人。看着它香喷喷、干干净净的样子，是不是觉得所有辛苦都值得了？`,
+    "批评": `${nickname}，被批评的那一刻，心里一定很难受。但你能接纳这份反馈，说明你有着成熟的心态。批评是成长的机会，而你正在变得更好。`,
+    "考试": `${nickname}，考试没考好不代表你不够努力，只是这次运气差了一点。你的付出和坚持，时间都看得见。下次会更好的。`,
+    "加班": `${nickname}，加班到很晚真的辛苦。你的责任感和专业精神值得赞赏。记得也要好好休息，照顾好自己。`,
+    "学习": `${nickname}，每一个认真学习的时刻，都是在为未来的自己铺路。你的努力，时间都看得见。`,
+    "工作": `${nickname}，工作中的你专业又靠谱。每一份认真对待的工作，都在证明你的价值。`,
+    "狗狗": `${nickname}，你对狗狗的爱，它一定都感受得到。能遇到你，是它最大的幸运。`,
+    "猫咪": `${nickname}，你对猫咪的爱，它一定都感受得到。能遇到你，是它最大的幸运。`,
+    "领导": `${nickname}，在职场上面对各种情况，你都处理得很好。你的成熟和专业值得赞赏。`,
+    "朋友": `${nickname}，人际关系中的你真诚又温暖。你的朋友很幸运能有你。`,
+  };
+  
+  return [customTemplates[keyword] || `${nickname}，你对生活的每一份用心，都值得被温柔以待。`];
 }
 
 // 主生成函数 - 使用 DeepSeek API
@@ -74,26 +126,35 @@ export async function generatePraise(
   theme: Theme,
   input?: string
 ): Promise<string[]> {
+  console.log("[generatePraise] Called with:", { nickname, themeName: theme.name, input });
+  
   try {
     // 调用后端 API 生成夸奖
+    console.log("[generatePraise] Calling API...");
     const result = await generatePraiseApi({
       nickname,
       themeName: theme.name,
       themeStyle: theme.style,
       userInput: input || undefined,
     });
+    
+    console.log("[generatePraise] API result:", result);
 
     if (result.success && result.praises.length > 0) {
+      console.log("[generatePraise] API success, returning praise:", result.praises[0]);
       // 只返回一句最动人的话
       return [result.praises[0]];
     }
 
     // API 返回失败，使用后备方案
-    console.warn("API returned no praises, using fallback");
+    console.warn("[generatePraise] API returned no praises, using fallback");
     return generateFallbackPraise(nickname, theme, input);
   } catch (error) {
     // API 调用失败，使用后备方案
-    console.error("Failed to generate praise via API:", error);
+    console.error("[generatePraise] Failed to generate praise via API:", error);
+    if (error instanceof Error) {
+      console.error("[generatePraise] Error details:", error.message, error.stack);
+    }
     return generateFallbackPraise(nickname, theme, input);
   }
 }

@@ -27,6 +27,12 @@ export async function generatePraiseWithDeepSeekV53(
   themeStyle: string,
   userInput?: string
 ): Promise<string[]> {
+  // V5.3 调试日志
+  console.log("[V5.3 DEBUG] generatePraiseWithDeepSeekV53 called");
+  console.log("[V5.3 DEBUG] nickname:", nickname);
+  console.log("[V5.3 DEBUG] themeName:", themeName);
+  console.log("[V5.3 DEBUG] userInput:", userInput);
+  
   if (!DEEPSEEK_API_KEY) {
     throw new Error("DEEPSEEK_API_KEY is not configured");
   }
@@ -76,6 +82,7 @@ export async function generatePraiseWithDeepSeekV53(
   if (userInput && userInput.trim()) {
     // 显式提取关键词（简单的关键词提取逻辑）
     const keywords = extractKeywords(userInput);
+    console.log("[V5.3 DEBUG] extracted keywords:", keywords);
     
     userPrompt = `${nickname} 对你说：
 "${userInput}"
